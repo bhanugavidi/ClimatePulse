@@ -1,12 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI , HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import reports, hotspots, forecast,alerts,federated
 from pydantic import BaseModel
+from db.supabase_client import supabase
 
 class LoginRequest(BaseModel):
     email: str
     password: str
-    
+
 app = FastAPI(
     title="ClimatePulse API",
     description="Federated Air Quality Intelligence for BRICS Cities",
@@ -30,6 +31,7 @@ app.include_router(alerts.router)
 app.include_router(federated.router)
 
 
+
 @app.post("/api/auth/login", tags=["Auth"])
 def login(credentials: LoginRequest):
     # Mock authentication for hackathon demo
@@ -44,6 +46,17 @@ def login(credentials: LoginRequest):
         "role": "citizen",
         "name": "Citizen User"
     }
+
+
+
+@app.get("/api/regions", tags=["Regions"])
+def get_regions():
+    try:
+        response = supabase.table("regions").select("*").execute()
+        return response.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/")
 def root():
     return {"message": "ClimatePulse Backend is running 🚀"}
