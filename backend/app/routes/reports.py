@@ -3,6 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 from db.supabase_client import supabase
 from app.models.schemas import ReportCreate, ReportResponse
+from app.services.clustering import update_hotspots_for_region
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -51,11 +52,18 @@ def submit_report(payload: ReportCreate):
         "severity": severity,
         "status": "new"
     }
-
+    
     try:
         response = supabase.table("pollution_reports").insert(data).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Database insertion failed")
+        
+        # Trigger real-time clustering for this region
+        try:
+            update_hotspots_for_region(region_id=str(payload.region_id))
+        except Exception as cluster_err:
+            print(f"Warning: Clustering update failed: {cluster_err}")
+
         return response.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

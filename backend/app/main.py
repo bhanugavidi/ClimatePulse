@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import reports, hotspots
+from app.routes import reports, hotspots, forecast,alerts,federated
 
 app = FastAPI(
     title="ClimatePulse API",
@@ -20,6 +20,9 @@ app.add_middleware(
 # Register routers
 app.include_router(reports.router)
 app.include_router(hotspots.router)
+app.include_router(forecast.router)
+app.include_router(alerts.router)
+app.include_router(federated.router)
 
 @app.get("/")
 def root():
