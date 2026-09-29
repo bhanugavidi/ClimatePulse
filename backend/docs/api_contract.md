@@ -1,9 +1,13 @@
-Markdown# ClimatePulse API Contract
+# ClimatePulse API Contract
 
-Base URL: `http://localhost:8000` (or your deployed backend URL)
+### Base URL: `http://localhost:8000` (or your deployed backend URL)
 
 All endpoints communicate using standard JSON payloads unless specified otherwise. Cross-Origin Resource Sharing (CORS) is enabled for all origins.
-1. System & Regions1.1 List RegionsRetrieve available cities/regions with their respective coordinates and UUIDs to populate location selectors or maps.   URL: /api/regions   Method: GET   Success Response (200 OK)JSON[
+## 1. System & Regions1.1 List RegionsRetrieve available cities/regions with their respective coordinates and UUIDs to populate location selectors or maps.   
+### URL: /api/regions   
+### Method: GET   
+### Success Response (200 OK)
+```JSON[
   {
     "id": "6874ef87-4706-4b58-ad96-c479d91111c6",
     "name": "New Delhi",
@@ -21,7 +25,8 @@ All endpoints communicate using standard JSON payloads unless specified otherwis
     "created_at": "2026-09-29T05:00:00Z"
   }
 ]
-2. Citizen Reports2.1 Submit Citizen ReportSubmit a new citizen observation. Backend assigns initial AI scoring and triggers DBSCAN clustering automatically.   URL: /api/reports   Method: POST   Content-Type: application/jsonRequest BodyFieldTypeRequiredDescriptionregion_idUUIDYesTarget region UUID   latfloatYesLatitude (-90.0 to 90.0)   lngfloatYesLongitude (-180.0 to 180.0)   photo_urlstringNoSupabase storage URL of uploaded image   descriptionstringNoDescription of pollution incident   reported_pm25floatNoCitizen-entered PM2.5 value   user_idUUIDNoUser ID (null for anonymous)   JSON{
+```
+##2. Citizen Reports2.1 Submit Citizen ReportSubmit a new citizen observation. Backend assigns initial AI scoring and triggers DBSCAN clustering automatically.   URL: /api/reports   Method: POST   Content-Type: application/jsonRequest BodyFieldTypeRequiredDescriptionregion_idUUIDYesTarget region UUID   latfloatYesLatitude (-90.0 to 90.0)   lngfloatYesLongitude (-180.0 to 180.0)   photo_urlstringNoSupabase storage URL of uploaded image   descriptionstringNoDescription of pollution incident   reported_pm25floatNoCitizen-entered PM2.5 value   user_idUUIDNoUser ID (null for anonymous)   JSON{
   "region_id": "6874ef87-4706-4b58-ad96-c479d91111c6",
   "lat": 28.6139,
   "lng": 77.2090,

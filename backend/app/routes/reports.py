@@ -3,6 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 from db.supabase_client import supabase
 from app.models.schemas import ReportCreate, ReportResponse
+from app.services.ai_scoring import score_report_ai
 from app.services.clustering import update_hotspots_for_region
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
@@ -34,9 +35,9 @@ def calculate_initial_ai_score(reported_pm25: Optional[float], has_photo: bool):
 
 @router.post("", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 def submit_report(payload: ReportCreate):
-    score, category, severity = calculate_initial_ai_score(
-        payload.reported_pm25, 
-        bool(payload.photo_url)
+    score, category, severity = score_report_ai(
+        photo_url=payload.photo_url,
+        reported_pm25=payload.reported_pm25
     )
 
     data = {
