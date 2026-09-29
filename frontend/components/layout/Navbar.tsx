@@ -27,19 +27,26 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    // Initialize dark mode based on class or system preference
-    if (document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // Initialize dark mode based ONLY on user's saved preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
       setIsDark(true);
       document.documentElement.classList.add('dark');
+    } else {
+      // Light mode is explicitly default
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
     }
   }, []);
 
   const toggleDarkMode = () => {
     if (isDark) {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
       setIsDark(false);
     } else {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
       setIsDark(true);
     }
   };

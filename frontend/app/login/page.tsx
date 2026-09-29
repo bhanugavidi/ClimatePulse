@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Leaf, User, ShieldAlert, ArrowRight } from "lucide-react";
+import { User, ShieldAlert, ArrowRight } from "lucide-react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -103,7 +103,7 @@ function LoginForm() {
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{` `}
             <Link href={`/register?role=${role}`} className={`font-semibold leading-6 text-${themeColor}-600 hover:text-${themeColor}-500`}>
               Register here
             </Link>

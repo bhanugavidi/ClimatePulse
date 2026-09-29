@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, X, Loader2, MapPin, AlertCircle } from "lucide-react";
 
 interface PlaceResult {
@@ -16,10 +16,23 @@ interface PlaceSearchProps {
 export function PlaceSearch({ onPlaceSelect, onClear }: PlaceSearchProps) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const lastSelectedRef = useRef("");
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Debounce the search query
   useEffect(() => {
@@ -36,6 +49,13 @@ export function PlaceSearch({ onPlaceSelect, onClear }: PlaceSearchProps) {
       setIsOpen(false);
       return;
     }
+    
+    if (debouncedQuery === lastSelectedRef.current) {
+      // User just selected this place, no need to search again
+      return;
+    }
+
+    const controller = new AbortController();
 
     const searchPlaces = async () => {
       setIsLoading(true);
@@ -44,25 +64,37 @@ export function PlaceSearch({ onPlaceSelect, onClear }: PlaceSearchProps) {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
             debouncedQuery
-          )}&limit=5`
+          )}&limit=5`,
+          { signal: controller.signal }
         );
         if (!res.ok) throw new Error("Network response was not ok");
         const data: PlaceResult[] = await res.json();
-        setResults(data);
-        setIsOpen(true);
-      } catch (err) {
+        
+        if (!controller.signal.aborted) {
+          setResults(data);
+          setIsOpen(true);
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
         setError("Failed to fetch locations.");
         setIsOpen(true);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     searchPlaces();
+    
+    return () => {
+      controller.abort();
+    };
   }, [debouncedQuery]);
 
   const handleClear = () => {
     setQuery("");
+    lastSelectedRef.current = "";
     setResults([]);
     setIsOpen(false);
     onClear();
@@ -70,12 +102,13 @@ export function PlaceSearch({ onPlaceSelect, onClear }: PlaceSearchProps) {
 
   const handleSelect = (place: PlaceResult) => {
     onPlaceSelect(parseFloat(place.lat), parseFloat(place.lon), place.display_name);
+    lastSelectedRef.current = place.display_name;
     setQuery(place.display_name);
     setIsOpen(false);
   };
 
   return (
-    <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000] pointer-events-auto w-[calc(100%-48px)] sm:w-full max-w-md">
+    <div ref={containerRef} className="absolute top-6 left-1/2 -translate-x-1/2 z-[1010] pointer-events-auto w-[calc(100%-48px)] sm:w-full max-w-md">
       {/* Search Input */}
       <div className="bg-white/95 backdrop-blur-xl rounded-full shadow-lg border border-slate-200/60 flex items-center px-4 py-3 transition-all focus-within:shadow-xl focus-within:ring-2 focus-within:ring-emerald-500/20 relative z-10">
         <Search className="h-5 w-5 text-slate-400 mr-3 shrink-0" />

@@ -1,6 +1,6 @@
 import { Filter } from "lucide-react";
 
-export type FilterType = "All" | "Air Quality" | "Fires" | "Industrial";
+export type FilterType = "All" | "Air Quality" | "Fires" | "Industrial" | "Traffic" | "Smoke" | "Dust";
 
 interface MapControlsProps {
   activeFilter: FilterType;
@@ -8,11 +8,11 @@ interface MapControlsProps {
 }
 
 export function MapControls({ activeFilter, onFilterChange }: MapControlsProps) {
-  const filters: FilterType[] = ["All", "Air Quality", "Fires", "Industrial"];
+  const filters: FilterType[] = ["All", "Air Quality", "Fires", "Industrial", "Traffic", "Smoke", "Dust"];
 
   return (
-    <div className="absolute top-6 right-6 z-[1000] pointer-events-auto">
-      <div className="bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-xl border border-slate-200/60 flex flex-col sm:flex-row items-start sm:items-center gap-1">
+    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[1000] pointer-events-auto w-[calc(100%-48px)] sm:w-auto">
+      <div className="bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-xl border border-slate-200/60 flex flex-row items-center gap-1 overflow-x-auto custom-scrollbar">
         <div className="flex items-center gap-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:flex">
           <Filter className="h-3 w-3" /> Filters
         </div>

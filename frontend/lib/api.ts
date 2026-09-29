@@ -1,6 +1,6 @@
 import { 
   HOTSPOTS_MOCK, REPORTS_MOCK, ALERTS_MOCK, FORECAST_MOCK, CITIES_MOCK, CROSS_BORDER_MOCK, DASHBOARD_STATS_MOCK,
-  Hotspot, Report, Alert, Forecast, City, CrossBorderSignal, DashboardStats 
+  Hotspot, Report, Alert, Forecast, City, CrossBorderSignal, DashboardStats, addMockHotspot
 } from "./mockData";
 
 // Simulate network delay
@@ -41,18 +41,50 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return DASHBOARD_STATS_MOCK;
 }
 
-export async function submitPollutionReport(data: any): Promise<{ success: boolean; aiAnalysis: any }> {
+export interface AIAnalysisResult {
+  category: string;
+  severity: string;
+  confidence: number;
+  estimated_source: string;
+  recommended_action: string;
+  location: string;
+  timestamp: string;
+}
+
+export async function submitPollutionReport(data: any): Promise<{ success: boolean; aiAnalysis: AIAnalysisResult }> {
   await delay(1500); // Simulate upload and AI processing
+  
+  const aiAnalysis = {
+    category: data.type || "Smoke",
+    severity: "High",
+    confidence: 91,
+    estimated_source: data.type === "Traffic" ? "Vehicle emissions" : "Industrial / Burning",
+    recommended_action: "Avoid prolonged outdoor exposure.",
+    location: data.location || "User Location",
+    timestamp: new Date().toISOString()
+  };
+
+  if (data.lat && data.lng) {
+    addMockHotspot({
+      id: `hs-new-${Date.now()}`,
+      location: aiAnalysis.location,
+      category: aiAnalysis.category,
+      pm25: parseInt(data.pm25) || Math.floor(Math.random() * 100) + 150,
+      risk_level: "High",
+      ai_score: aiAnalysis.confidence,
+      status: "Active",
+      detectedTime: "Just now",
+      estimatedSource: aiAnalysis.estimated_source,
+      recommendedAction: aiAnalysis.recommended_action,
+      lat: data.lat,
+      lng: data.lng,
+      radius: 2000,
+      description: data.description || "Reported by user.",
+    });
+  }
+
   return {
     success: true,
-    aiAnalysis: {
-      category: data.type || "Smoke / Haze",
-      severity: "High",
-      confidence: 91,
-      estimated_source: data.type === "Traffic" ? "Vehicle emissions" : "Industrial / Burning",
-      recommended_action: "Avoid prolonged outdoor exposure.",
-      location: data.location || "User Location",
-      timestamp: new Date().toISOString()
-    }
+    aiAnalysis
   };
 }

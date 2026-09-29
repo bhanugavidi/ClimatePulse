@@ -1,21 +1,28 @@
 import { Hotspot } from "@/lib/mockData";
-import { Flame, Factory, Wind, Brain, MapPin, Clock, Users } from "lucide-react";
+import { Flame, Factory, Wind, Brain, MapPin, Clock, Users, Car, Cloud, CloudFog } from "lucide-react";
 
 export function HotspotPopup({ hotspot }: { hotspot: Hotspot }) {
   const getCategoryIcon = () => {
     switch (hotspot.category) {
       case "Fires": return <Flame className="h-5 w-5 text-red-500" />;
       case "Industrial": return <Factory className="h-5 w-5 text-orange-500" />;
-      default: return <Wind className="h-5 w-5 text-blue-500" />;
+      case "Traffic": return <Car className="h-5 w-5 text-blue-500" />;
+      case "Smoke": return <Cloud className="h-5 w-5 text-slate-500" />;
+      case "Dust": return <CloudFog className="h-5 w-5 text-yellow-600" />;
+      default: return <Wind className="h-5 w-5 text-teal-500" />;
     }
   };
 
   const getRiskColorClass = () => {
     switch (hotspot.risk_level) {
-      case "severe": return "text-red-700 bg-red-100";
-      case "high": return "text-orange-700 bg-orange-100";
-      case "poor": return "text-yellow-700 bg-yellow-100";
-      case "moderate": return "text-green-700 bg-green-100";
+      case "severe": 
+      case "Critical": return "text-red-700 bg-red-100";
+      case "high": 
+      case "High": return "text-orange-700 bg-orange-100";
+      case "poor": 
+      case "Medium": return "text-yellow-700 bg-yellow-100";
+      case "moderate": 
+      case "Low": return "text-green-700 bg-green-100";
       case "good": return "text-emerald-700 bg-emerald-100";
       default: return "text-slate-700 bg-slate-100";
     }
@@ -68,7 +75,7 @@ export function HotspotPopup({ hotspot }: { hotspot: Hotspot }) {
           <Users className="h-3 w-3" /> {hotspot.reports_count} Reports
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="h-3 w-3" /> {new Date(hotspot.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <Clock className="h-3 w-3" /> {new Date(hotspot.last_updated || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
     </div>

@@ -16,10 +16,14 @@ const customIcon = new L.Icon({
 
 const getRiskColor = (risk: Hotspot["risk_level"]) => {
   switch (risk) {
-    case "severe": return "#7f1d1d"; // dark red
-    case "high": return "#ef4444"; // red
-    case "poor": return "#f97316"; // orange
-    case "moderate": return "#eab308"; // yellow
+    case "severe": 
+    case "Critical": return "#7f1d1d"; // dark red
+    case "high": 
+    case "High": return "#ef4444"; // red
+    case "poor": 
+    case "Medium": return "#f97316"; // orange
+    case "moderate": 
+    case "Low": return "#eab308"; // yellow
     case "good": return "#22c55e"; // green
     default: return "#3b82f6";
   }
