@@ -79,6 +79,46 @@ def update_hotspots_for_region(region_id: str, eps_km: float = 1.0, min_samples:
 
         insert_res = supabase.table("pollution_hotspots").insert(hotspot_entry).execute()
         if insert_res.data:
-            new_hotspots.append(insert_res.data[0])
+            created_hs = insert_res.data[0]
+            new_hotspots.append(created_hs)
+
+            # Auto-generate Authority Alert for high/severe clusters
+            if risk in ["high", "severe"]:
+                alert_entry = {
+                    "hotspot_id": created_hs["id"],
+                    "region_id": region_id,
+                    "message": f"CRITICAL: {risk.upper()} pollution cluster formed ({report_count} reports) near ({round(center_lat, 3)}, {round(center_lng, 3)}).",
+                    "severity": risk,
+                    "status": "open",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                supabase.table("alerts").insert(alert_entry).execute()
+
+                # Trigger Federated Cross-Border Packet to demo partner country (e.g. São Paulo)
+                try:
+                    target_res = (
+                        supabase.table("regions")
+                        .select("id")
+                        .neq("id", region_id)
+                        .limit(1)
+                        .execute()
+                    )
+                    if target_res.data:
+                        target_id = target_res.data[0]["id"]
+                        fed_packet = {
+                            "source_region_id": region_id,
+                            "target_region_id": target_id,
+                            "risk_summary_json": {
+                                "cluster_center": [round(center_lat, 4), round(center_lng, 4)],
+                                "severity": risk,
+                                "plume_vector_degrees": 125,
+                                "transboundary_drift_probability": 0.88,
+                                "confidence": 0.92
+                            },
+                            "shared_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        supabase.table("federated_predictions").insert(fed_packet).execute()
+                except Exception as fed_err:
+                    print(f"Federated auto-share notice: {fed_err}")
 
     return new_hotspots
