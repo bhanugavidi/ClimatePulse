@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -152,11 +152,7 @@ export default function ReportPage() {
       return;
     }
     
-    // DEBUG CHECK FOR DUMMY VARS
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      setErrorMsg("Missing Supabase credentials! Please restart your Next.js server so it picks up your .env.local changes.");
-      return;
-    }
+    
 
     setIsSubmitting(true);
     let photoUrl = null;
@@ -357,7 +353,7 @@ export default function ReportPage() {
                       {isGettingLocation ? (
                         <><Loader2 className="w-3 h-3 animate-spin" /> Getting location...</>
                       ) : location ? (
-                        <span className="text-emerald-600">✓ Location detected</span>
+                        <span className="text-emerald-600">âœ“ Location detected</span>
                       ) : locationError ? (
                         <><AlertTriangle className="w-3 h-3 text-red-500" /> <span className="text-red-500 hover:text-red-600">Try again</span></>
                       ) : (
@@ -572,3 +568,4 @@ export default function ReportPage() {
     </div>
   );
 }
+
