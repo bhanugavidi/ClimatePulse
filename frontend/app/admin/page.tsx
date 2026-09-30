@@ -1,6 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+const PollutionMap = dynamic(() => import("@/components/map/PollutionMap"), { ssr: false });
 import { 
   getRegions, 
   getHotspots, 
@@ -233,7 +236,7 @@ export default function DashboardPage() {
                   <Globe className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-slate-900 tracking-tight">{currentWeather?.temperature || '--'}°C</div>
+                  <div className="text-xl font-bold text-slate-900 tracking-tight">{currentWeather?.temperature || '--'}Â°C</div>
                   <p className="text-sm text-slate-500 mt-1 font-medium">{currentWeather?.wind_speed || '--'} km/h Wind</p>
                 </div>
               </div>
@@ -255,14 +258,8 @@ export default function DashboardPage() {
 
             {/* 4. Critical Alerts */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="mb-6 flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Alert Center</h2>
-                  <p className="text-sm text-slate-500">Manage and resolve active alerts.</p>
-                </div>
-                <span className="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md">{alerts.length} Total</span>
-              </div>
-              <AlertList alerts={alerts as any} onUpdate={() => loadData(selectedRegionId)} regionId={selectedRegionId} />
+              
+              <AlertList alerts={alerts as any} reports={reports} hotspots={hotspots} onUpdate={() => loadData(selectedRegionId)} regionId={selectedRegionId} />
             </div>
 
             {/* 5. Live Hotspots Map */}
@@ -270,16 +267,9 @@ export default function DashboardPage() {
               <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                 <h2 className="text-lg font-bold text-slate-900">Admin Map: Hotspots & Cross-Border Signals</h2>
               </div>
-              <div className="h-96 bg-slate-100 relative w-full overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                {hotspots.map(h => (
-                  <div key={h.id} className="absolute w-4 h-4 bg-red-500 rounded-full animate-pulse" style={{ top: `${Math.random() * 80 + 10}%`, left: `${Math.random() * 80 + 10}%` }}></div>
-                ))}
-                {federatedRisk?.inbound_cross_border_signals.map((s, i) => (
-                  <div key={i} className="absolute w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ top: `${Math.random() * 80 + 10}%`, left: `${Math.random() * 80 + 10}%` }}></div>
-                ))}
-                <p className="text-sm font-semibold text-slate-700 z-10 bg-white/90 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200 shadow-sm">Interactive Map Placeholder</p>
-              </div>
+              <div className="h-96 w-full">
+                  <PollutionMap hotspots={hotspots} reports={reports} className="h-full w-full rounded-b-2xl z-0" />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -341,7 +331,7 @@ export default function DashboardPage() {
                           <div>
                             <div className="font-medium text-slate-200">Source: Region {signal.source_region_id}</div>
                             <div className="text-sm text-slate-400 mt-1">
-                              Plume Direction: {signal.plume_direction}° | Projected Drift: {signal.projected_drift}km
+                              Plume Direction: {signal.plume_direction}Â° | Projected Drift: {signal.projected_drift}km
                             </div>
                           </div>
                           <button
@@ -368,3 +358,9 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+
+
+
+

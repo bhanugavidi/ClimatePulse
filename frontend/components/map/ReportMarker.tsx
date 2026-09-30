@@ -1,4 +1,4 @@
-import { Marker, Popup } from "react-leaflet";
+﻿import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { CitizenReport } from "@/lib/api";
 
@@ -51,11 +51,20 @@ export function ReportMarker({ report }: { report: CitizenReport }) {
       position={[report.lat, report.lng]}
       icon={customIcon}
     >
-      <Popup className="report-popup font-sans rounded-xl">
-        <div className="p-2 w-[220px]">
-          <h4 className="font-bold text-slate-900 mb-2 border-b border-slate-100 pb-1">Citizen Report</h4>
-          
-          <div className="space-y-1.5 text-xs text-slate-700">
+      <Popup className="report-popup font-sans rounded-xl overflow-hidden p-0">
+        <div className="w-[220px]">
+          {report.photo_url && (
+            <div className="w-full h-32 bg-slate-100 border-b border-slate-200">
+              <img src={report.photo_url} alt="Report evidence" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
+              <h4 className="font-bold text-slate-900">Citizen Report</h4>
+              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase">{report.status}</span>
+            </div>
+            
+            <div className="space-y-1.5 text-xs text-slate-700">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-slate-500">Severity</span>
               <span className="font-bold" style={{ color: props.color }}>{props.label}</span>
@@ -74,7 +83,7 @@ export function ReportMarker({ report }: { report: CitizenReport }) {
             {report.reported_pm25 !== undefined && report.reported_pm25 !== null && (
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-slate-500">PM2.5</span>
-                <span className="font-medium">{report.reported_pm25} µg/m³</span>
+                <span className="font-medium">{report.reported_pm25} Âµg/mÂ³</span>
               </div>
             )}
             
@@ -94,8 +103,10 @@ export function ReportMarker({ report }: { report: CitizenReport }) {
               </p>
             </div>
           )}
+          </div>
         </div>
       </Popup>
     </Marker>
   );
 }
+

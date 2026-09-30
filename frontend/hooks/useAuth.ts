@@ -1,43 +1,52 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { User, Session } from '@supabase/supabase-js';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Check if user has admin metadata
-      const role = session?.user?.user_metadata?.role;
-      setIsAdmin(role === 'admin');
-      
-      setLoading(false);
-    });
+    // Read from localStorage on mount
+    const storedToken = localStorage.getItem('access_token');
+    const storedUser = localStorage.getItem('user');
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      const role = session?.user?.user_metadata?.role;
-      setIsAdmin(role === 'admin');
-      
-      setLoading(false);
-    });
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAdmin(parsedUser.role === 'admin' || parsedUser.role === 'authority');
+      } catch (e) {
+        // Invalid user JSON
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
 
-    return () => subscription.unsubscribe();
+    // Listen for custom event for cross-component sync
+    const handleAuthChange = () => {
+      const updatedUser = localStorage.getItem('user');
+      if (updatedUser) {
+        const parsed = JSON.parse(updatedUser);
+        setUser(parsed);
+        setIsAdmin(parsed.role === 'admin' || parsed.role === 'authority');
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
+    };
+
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth-change'));
+    setUser(null);
+    setIsAdmin(false);
   };
 
-  return { user, session, loading, isAdmin, signOut };
+  return { user, loading, isAdmin, signOut };
 }

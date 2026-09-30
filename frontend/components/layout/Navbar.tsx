@@ -2,17 +2,61 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Leaf, UserCircle, LogOut, Moon, Sun, LayoutDashboard, FileText } from 'lucide-react';
+import { Search, Leaf, UserCircle, LogOut, Moon, Sun, Bell, BellRing } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { getReports } from '@/lib/api';
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user, isAdmin, signOut, loading } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const checkNotifications = async () => {
+      try {
+        const reports = await getReports({ user_id: user.id });
+        const resolved = reports.filter(r => r.status === 'resolved');
+        const readIds = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+        
+        const unread = resolved.filter(r => !readIds.includes(r.id));
+        
+        if (unread.length > unreadCount) {
+          toast.success("An admin has resolved one of your pollution reports!", {
+            icon: <BellRing className="w-4 h-4 text-emerald-600" />
+          });
+        }
+        
+        setUnreadCount(unread.length);
+      } catch (err) {
+        // ignore polling errors
+      }
+    };
+
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 10000); // 10s poll
+    return () => clearInterval(interval);
+  }, [user, unreadCount]);
+
+  const handleNotificationsClick = async () => {
+    if (!user) return;
+    try {
+      const reports = await getReports({ user_id: user.id });
+      const resolved = reports.filter(r => r.status === 'resolved').map(r => r.id);
+      localStorage.setItem('read_notifications', JSON.stringify(resolved));
+      setUnreadCount(0);
+      router.push('/profile');
+    } catch (err) {}
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,6 +155,22 @@ export function Navbar() {
           <button className="text-slate-600 hover:text-slate-900 transition-colors hidden sm:block" aria-label="Search">
             <Search className="h-5 w-5" />
           </button>
+          
+          {user && (
+            <button 
+              onClick={handleNotificationsClick}
+              className="relative text-slate-600 hover:text-emerald-600 transition-colors p-2 rounded-full hover:bg-slate-100" 
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+              )}
+            </button>
+          )}
           
           {user ? (
             <div className="flex items-center gap-3 border-l border-slate-300 pl-4 ml-2">

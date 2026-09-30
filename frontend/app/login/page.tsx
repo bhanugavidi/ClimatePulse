@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { User, ShieldAlert, Loader2, Eye, EyeOff, Mail } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { authLogin, authRegister } from "@/lib/api";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -12,13 +12,13 @@ function LoginForm() {
   const router = useRouter();
 
   const [roleTab, setRoleTab] = useState<"citizen" | "admin">("citizen");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  // If redirect is admin, default to admin tab
   useEffect(() => {
     if (redirect === "/admin") {
       setRoleTab("admin");
@@ -31,35 +31,41 @@ function LoginForm() {
 
     try {
       if (isSignUp && roleTab === "citizen") {
-        const { data, error } = await supabase.auth.signUp({
+        const data = await authRegister({
+          name: name || email.split('@')[0], // Fallback if name is empty
           email,
           password,
+          role: "citizen"
         });
 
-        if (error) throw error;
-        toast.success("Account created successfully. Please check your email or proceed.");
-        if (data.session) {
-          router.push(redirect);
-        }
+        toast.success("Account created successfully!");
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event('auth-change'));
+        router.push(redirect);
+
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const data = await authLogin({
           email,
           password,
         });
 
-        if (error) throw error;
         toast.success("Successfully logged in.");
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event('auth-change'));
         
-        // Let middleware or useAuth handle redirection if they try to access admin without rights
-        const isAdmin = data.user?.user_metadata?.role === 'admin';
+        const isAdminUser = data.role === 'admin' || data.role === 'authority';
         
-        if (roleTab === 'admin' && !isAdmin) {
+        if (roleTab === 'admin' && !isAdminUser) {
           toast.error("This account does not have Admin privileges.");
-          await supabase.auth.signOut();
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user');
+          window.dispatchEvent(new Event('auth-change'));
           return;
         }
 
-        if (isAdmin && redirect === '/report') {
+        if (isAdminUser && redirect === '/report') {
             router.push("/admin");
         } else {
             router.push(redirect);
@@ -119,6 +125,19 @@ function LoginForm() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none transition-all text-sm text-slate-900"
+                  placeholder="Jane Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Email address</label>
               <input

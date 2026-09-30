@@ -82,3 +82,16 @@ def get_reports(region_id: Optional[UUID] = None, severity: Optional[str] = None
         return response.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@router.patch("/{report_id}")
+def update_report_status(report_id: str, payload: dict):
+    # payload expects {"status": "resolved"}
+    if "status" not in payload:
+        raise HTTPException(status_code=400, detail="Missing status")
+    
+    try:
+        response = supabase.table("pollution_reports").update({"status": payload["status"]}).eq("id", report_id).execute()
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Report not found")
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

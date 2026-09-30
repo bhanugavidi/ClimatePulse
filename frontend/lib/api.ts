@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+﻿const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // --- TYPES ---
 
@@ -94,13 +94,25 @@ export type CombinedFederatedRisk = {
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
+        ...headers,
+        ...(options?.headers as any || {}),
       },
     });
+    
     if (!response.ok) {
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
@@ -124,6 +136,13 @@ export async function getReports(params?: { region_id?: string; severity?: strin
   if (params?.user_id) searchParams.append("user_id", params.user_id);
   const query = searchParams.toString();
   return fetchAPI<CitizenReport[]>(`/api/reports${query ? `?${query}` : ""}`);
+}
+
+export async function updateReportStatus(report_id: string, status: string): Promise<CitizenReport> {
+  return fetchAPI<CitizenReport>(`/api/reports/${report_id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status })
+  });
 }
 
 export async function submitReport(data: {
@@ -178,3 +197,19 @@ export async function shareFederatedPrediction(data: FederatedShareRequest): Pro
 export async function getCombinedFederatedRisk(regionId: string): Promise<CombinedFederatedRisk> {
   return fetchAPI<CombinedFederatedRisk>(`/api/federated/combined?region_id=${regionId}`);
 }
+
+export async function authLogin(payload: any) {
+  return fetchAPI<any>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function authRegister(payload: any) {
+  return fetchAPI<any>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+
