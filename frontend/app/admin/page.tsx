@@ -166,6 +166,32 @@ export default function DashboardPage() {
   const currentWeather = forecast?.current_weather;
   const currentAqi = forecast?.baseline_pm25;
 
+  const combinedAlerts = [...alerts];
+  const combinedHotspots = [...hotspots];
+  reports.forEach(r => {
+    if (r.status !== "resolved") {
+      combinedHotspots.push({
+         id: "mock-hotspot-" + r.id,
+         region_id: r.region_id,
+         center_lat: r.lat,
+         center_lng: r.lng,
+         radius_km: 1,
+         severity: r.severity || "HIGH",
+         created_at: r.created_at
+      } as any);
+      
+      combinedAlerts.push({
+         id: "report-" + r.id,
+         hotspot_id: "mock-hotspot-" + r.id,
+         region_id: r.region_id,
+         message: `Citizen Report: ${r.ai_category || "Incident"} - ${r.description || "No description provided."}`,
+         severity: r.severity || "HIGH",
+         status: r.status === "reviewed" ? "acknowledged" : "open",
+         created_at: r.created_at
+      } as any);
+    }
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
       {/* 1. Header */}
@@ -259,7 +285,7 @@ export default function DashboardPage() {
             {/* 4. Critical Alerts */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
               
-              <AlertList alerts={alerts as any} reports={reports} hotspots={hotspots} onUpdate={() => loadData(selectedRegionId)} regionId={selectedRegionId} />
+              <AlertList alerts={combinedAlerts as any} reports={reports} hotspots={combinedHotspots} onUpdate={() => loadData(selectedRegionId)} regionId={selectedRegionId} />
             </div>
 
             {/* 5. Live Hotspots Map */}
@@ -358,6 +384,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 
 

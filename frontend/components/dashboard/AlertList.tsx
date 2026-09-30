@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Alert, updateAlertStatus, CitizenReport, Hotspot } from "@/lib/api";
+import { Alert, updateAlertStatus, updateReportStatus, CitizenReport, Hotspot } from "@/lib/api";
 import { AlertCircle, AlertTriangle, Info, Check, ArrowUpCircle, MapPin, ImageIcon, Camera, Activity, FileText } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
@@ -94,7 +94,7 @@ export function AlertList({ alerts, reports, hotspots, onUpdate, regionId }: Ale
   const handleUpdateStatus = async (alertId: string, status: string) => {
     setUpdatingId(alertId);
     try {
-      await updateAlertStatus(alertId, status);
+      if (alertId.startsWith("report-")) { await updateReportStatus(alertId.replace("report-", ""), status); } else { await updateAlertStatus(alertId, status); }
       toast.success(`Alert marked as ${status}`);
       onUpdate(regionId);
       
@@ -390,5 +390,6 @@ export function AlertList({ alerts, reports, hotspots, onUpdate, regionId }: Ale
     </div>
   );
 }
+
 
 
