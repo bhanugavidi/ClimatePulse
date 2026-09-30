@@ -1,6 +1,6 @@
 "use client";
 
-import { Hotspot } from "@/lib/mockData";
+import { Hotspot } from "@/lib/api";
 import { useState } from "react";
 import { X, Map as MapIcon, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -9,10 +9,10 @@ export function HotspotTable({ hotspots }: { hotspots: Hotspot[] }) {
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
 
   const getSeverityStyles = (severity: string) => {
-    switch (severity) {
-      case "Critical": return "bg-red-100 text-red-700";
-      case "High": return "bg-orange-100 text-orange-700";
-      case "Medium": return "bg-yellow-100 text-yellow-700";
+    switch (severity?.toLowerCase()) {
+      case "critical": return "bg-red-100 text-red-700";
+      case "high": return "bg-orange-100 text-orange-700";
+      case "medium": return "bg-yellow-100 text-yellow-700";
       default: return "bg-green-100 text-green-700";
     }
   };
@@ -23,12 +23,11 @@ export function HotspotTable({ hotspots }: { hotspots: Hotspot[] }) {
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-slate-500 uppercase bg-slate-50/50">
             <tr>
-              <th className="px-6 py-4 font-semibold rounded-tl-xl">Location</th>
-              <th className="px-6 py-4 font-semibold">Type</th>
-              <th className="px-6 py-4 font-semibold">AQI</th>
-              <th className="px-6 py-4 font-semibold">Severity</th>
-              <th className="px-6 py-4 font-semibold">Confidence</th>
-              <th className="px-6 py-4 font-semibold rounded-tr-xl">Status</th>
+              <th className="px-6 py-4 font-semibold rounded-tl-xl">Coordinates</th>
+              <th className="px-6 py-4 font-semibold">Risk Level</th>
+              <th className="px-6 py-4 font-semibold">Radius</th>
+              <th className="px-6 py-4 font-semibold">Reports</th>
+              <th className="px-6 py-4 font-semibold rounded-tr-xl">Last Updated</th>
             </tr>
           </thead>
           <tbody>
@@ -38,24 +37,15 @@ export function HotspotTable({ hotspots }: { hotspots: Hotspot[] }) {
                 onClick={() => setSelectedHotspot(hotspot)}
                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"
               >
-                <td className="px-6 py-4 font-medium text-slate-900">{hotspot.location}</td>
-                <td className="px-6 py-4 text-slate-600">{hotspot.category}</td>
-                <td className="px-6 py-4 font-semibold text-slate-700">{hotspot.pm25}</td>
+                <td className="px-6 py-4 font-medium text-slate-900">{hotspot.center_lat.toFixed(4)}, {hotspot.center_lng.toFixed(4)}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${getSeverityStyles(hotspot.risk_level)}`}>
                     {hotspot.risk_level}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-semibold text-slate-600">{hotspot.ai_score}%</td>
-                <td className="px-6 py-4">
-                  <span className={`text-xs font-medium ${
-                    hotspot.status === 'Active' ? 'text-red-600' :
-                    hotspot.status === 'Investigating' ? 'text-orange-600' :
-                    'text-teal-600'
-                  }`}>
-                    {hotspot.status}
-                  </span>
-                </td>
+                <td className="px-6 py-4 text-slate-600">{hotspot.radius_m}m</td>
+                <td className="px-6 py-4 font-semibold text-slate-700">{hotspot.report_count}</td>
+                <td className="px-6 py-4 text-slate-600">{new Date(hotspot.last_updated).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
@@ -71,8 +61,8 @@ export function HotspotTable({ hotspots }: { hotspots: Hotspot[] }) {
           >
             <div className="p-6 border-b border-slate-100 flex justify-between items-start">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">{selectedHotspot.location}</h3>
-                <p className="text-slate-500 text-sm mt-1">Detected {selectedHotspot.detectedTime}</p>
+                <h3 className="text-xl font-bold text-slate-900">Hotspot Details</h3>
+                <p className="text-slate-500 text-sm mt-1">Updated {new Date(selectedHotspot.last_updated).toLocaleString()}</p>
               </div>
               <button 
                 onClick={() => setSelectedHotspot(null)}
@@ -85,31 +75,23 @@ export function HotspotTable({ hotspots }: { hotspots: Hotspot[] }) {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Pollution Type</p>
-                  <p className="font-semibold text-slate-900">{selectedHotspot.category}</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Coordinates</p>
+                  <p className="font-semibold text-slate-900">{selectedHotspot.center_lat.toFixed(4)}, {selectedHotspot.center_lng.toFixed(4)}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">AQI</p>
-                  <p className="font-semibold text-slate-900">{selectedHotspot.pm25}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Severity</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Risk Level</p>
                   <span className={`px-2.5 py-1 inline-block rounded-md text-xs font-bold uppercase tracking-wider ${getSeverityStyles(selectedHotspot.risk_level)}`}>
                     {selectedHotspot.risk_level}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">AI Confidence</p>
-                  <p className="font-semibold text-slate-900">{selectedHotspot.ai_score}%</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Radius</p>
+                  <p className="font-semibold text-slate-900">{selectedHotspot.radius_m} meters</p>
                 </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h4 className="text-sm font-semibold text-slate-900 mb-2">Estimated Source</h4>
-                <p className="text-sm text-slate-600 mb-4">{selectedHotspot.estimatedSource}</p>
-                
-                <h4 className="text-sm font-semibold text-slate-900 mb-2">Recommended Action</h4>
-                <p className="text-sm text-slate-600">{selectedHotspot.recommendedAction}</p>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Report Count</p>
+                  <p className="font-semibold text-slate-900">{selectedHotspot.report_count}</p>
+                </div>
               </div>
             </div>
 
