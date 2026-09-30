@@ -1,6 +1,6 @@
 import { Marker, Popup, Circle, LayerGroup } from "react-leaflet";
 import L from "leaflet";
-import { Hotspot } from "@/lib/mockData";
+import { Hotspot } from "@/lib/api";
 import { HotspotPopup } from "./HotspotPopup";
 
 // Fix for default Leaflet icon issues in Next.js
@@ -15,15 +15,14 @@ const customIcon = new L.Icon({
 });
 
 const getRiskColor = (risk: Hotspot["risk_level"]) => {
-  switch (risk) {
+  switch (risk?.toLowerCase()) {
     case "severe": 
-    case "Critical": return "#7f1d1d"; // dark red
-    case "high": 
-    case "High": return "#ef4444"; // red
+    case "critical": return "#7f1d1d"; // dark red
+    case "high": return "#ef4444"; // red
     case "poor": 
-    case "Medium": return "#f97316"; // orange
+    case "medium": return "#f97316"; // orange
     case "moderate": 
-    case "Low": return "#eab308"; // yellow
+    case "low": return "#eab308"; // yellow
     case "good": return "#22c55e"; // green
     default: return "#3b82f6";
   }
@@ -40,8 +39,8 @@ export function HotspotMarker({ hotspot, onSelect }: HotspotMarkerProps) {
   return (
     <LayerGroup>
       <Circle 
-        center={[hotspot.lat, hotspot.lng]} 
-        radius={hotspot.radius}
+        center={[hotspot.center_lat, hotspot.center_lng]} 
+        radius={hotspot.radius_m}
         pathOptions={{
           color: color,
           fillColor: color,
@@ -50,7 +49,7 @@ export function HotspotMarker({ hotspot, onSelect }: HotspotMarkerProps) {
         }}
       />
       <Marker 
-        position={[hotspot.lat, hotspot.lng]}
+        position={[hotspot.center_lat, hotspot.center_lng]}
         icon={customIcon}
         eventHandlers={{
           click: () => onSelect && onSelect(hotspot),
