@@ -1,12 +1,11 @@
 from fastapi import FastAPI , HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import reports, hotspots, forecast,alerts,federated
 from pydantic import BaseModel
 from db.supabase_client import supabase
+from app.routes import reports, hotspots, forecast, alerts, federated, auth
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+# Include auth router
+
 
 app = FastAPI(
     title="ClimatePulse API",
@@ -29,23 +28,10 @@ app.include_router(hotspots.router)
 app.include_router(forecast.router)
 app.include_router(alerts.router)
 app.include_router(federated.router)
+app.include_router(auth.router)
 
 
 
-@app.post("/api/auth/login", tags=["Auth"])
-def login(credentials: LoginRequest):
-    # Mock authentication for hackathon demo
-    if "authority" in credentials.email.lower() or "admin" in credentials.email.lower():
-        return {
-            "token": "demo-authority-token",
-            "role": "authority",
-            "name": "Municipal Air Quality Officer"
-        }
-    return {
-        "token": "demo-citizen-token",
-        "role": "citizen",
-        "name": "Citizen User"
-    }
 
 
 
