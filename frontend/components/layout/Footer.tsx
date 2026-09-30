@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Leaf } from 'lucide-react';
 
 export function Footer() {
@@ -23,9 +23,7 @@ export function Footer() {
             <Link href="/report" className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
               Report
             </Link>
-            <Link href="/dashboard" className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
-              Dashboard
-            </Link>
+            
             <Link href="/cross-border" className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
               Cross-Border
             </Link>
@@ -41,3 +39,4 @@ export function Footer() {
     </footer>
   );
 }
+

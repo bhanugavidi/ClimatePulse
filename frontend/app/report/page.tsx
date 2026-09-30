@@ -480,10 +480,10 @@ export default function ReportPage() {
                   Submit Another
                 </button>
                 <button 
-                  onClick={() => window.location.href = '/dashboard'}
+                  onClick={() => window.location.href = '/profile'}
                   className="flex-1 bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-emerald-700 flex items-center justify-center gap-2 transition-colors"
                 >
-                  View Dashboard <ChevronRight className="w-4 h-4" />
+                  View My Reports <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -568,4 +568,5 @@ export default function ReportPage() {
     </div>
   );
 }
+
 

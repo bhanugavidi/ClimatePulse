@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ function RegisterForm() {
       if (isCitizen) {
         router.push("/report");
       } else {
-        router.push("/dashboard");
+        router.push("/profile");
       }
     }, 1500);
   };
@@ -113,7 +113,7 @@ function RegisterForm() {
               <input
                 type="password"
                 required
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 className={`block w-full rounded-lg border-0 py-3 px-4 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 ${isCitizen ? 'focus:ring-emerald-600' : 'focus:ring-slate-900'}`}
               />
             </div>
@@ -145,3 +145,4 @@ export default function RegisterPage() {
     </Suspense>
   );
 }
+
