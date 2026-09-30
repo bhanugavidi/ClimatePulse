@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Loader2, X } from "lucide-react";
-import { Hotspot } from "@/lib/mockData";
+import { Hotspot, getHotspots, getReports, CitizenReport } from "@/lib/api";
 import { HotspotPopup } from "@/components/map/HotspotPopup";
 
 const MapComponent = dynamic(() => import("@/components/map/PollutionMap"), { 
@@ -19,17 +19,59 @@ const MapComponent = dynamic(() => import("@/components/map/PollutionMap"), {
 });
 
 export default function MapPage() {
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [reports, setReports] = useState<CitizenReport[]>([]);
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [hotspotsData, reportsData] = await Promise.all([
+          getHotspots(),
+          getReports()
+        ]);
+        setHotspots(hotspotsData);
+        setReports(reportsData);
+      } catch (err) {
+        setError("Unable to connect to ClimatePulse backend.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex h-[calc(100vh-64px)] w-full items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4 text-red-500">
+          <p className="font-semibold">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-[calc(100vh-64px)] w-full overflow-hidden">
       
       {/* Full Width/Height Map Area */}
       <div className="absolute inset-0 z-0">
-        <MapComponent 
-          selectedHotspot={selectedHotspot} 
-          onHotspotSelect={setSelectedHotspot} 
-        />
+        {!loading && (
+          <MapComponent 
+            hotspots={hotspots}
+            reports={reports}
+            selectedHotspot={selectedHotspot} 
+            onHotspotSelect={setSelectedHotspot} 
+          />
+        )}
       </div>
 
       {/* Floating Panel (Desktop left side, Mobile bottom) */}
@@ -48,30 +90,26 @@ export default function MapPage() {
         `}
       >
         {selectedHotspot && (
-          <div className="flex flex-col p-6 h-full">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">Intelligence Report</h2>
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <h2 className="font-bold text-slate-900 tracking-tight">Intelligence Report</h2>
+              </div>
               <button 
                 onClick={() => setSelectedHotspot(null)}
-                className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 bg-slate-50/50">
               <HotspotPopup hotspot={selectedHotspot} />
             </div>
-            
-            <div className="mt-6 pt-4 space-y-3 bg-white">
-              <button className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-semibold transition-all shadow-sm">
-                View Full Analysis
-              </button>
-              <button className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-all">
-                Share Alert
-              </button>
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>

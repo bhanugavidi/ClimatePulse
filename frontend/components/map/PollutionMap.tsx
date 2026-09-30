@@ -4,10 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import { MapContainer, TileLayer, useMap, useMapEvents, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { HOTSPOTS_MOCK, Hotspot } from "@/lib/mockData";
+import { Hotspot, CitizenReport } from "@/lib/api";
 import { MapLegend } from "./MapLegend";
 import { MapControls, FilterType } from "./MapControls";
 import { HotspotMarker } from "./HotspotMarker";
+import { ReportMarker } from "./ReportMarker";
 import { CustomZoom } from "./CustomZoom";
 import { PlaceSearch } from "./PlaceSearch";
 
@@ -51,6 +52,8 @@ interface SearchedPlace {
 }
 
 interface PollutionMapProps {
+  hotspots?: Hotspot[];
+  reports?: CitizenReport[];
   selectedHotspot?: Hotspot | null;
   onHotspotSelect?: (hotspot: Hotspot | null) => void;
   className?: string;
@@ -64,6 +67,8 @@ import { CurrentLocationButton } from "./CurrentLocationButton";
 import { LocationState } from "@/hooks/useCurrentLocation";
 
 export default function PollutionMap({ 
+  hotspots = [],
+  reports = [],
   selectedHotspot, 
   onHotspotSelect, 
   className = "w-full h-full", 
@@ -84,11 +89,10 @@ export default function PollutionMap({
     popupAnchor: [0, -12],
   }), []);
 
-  // Base hotspots (filtered only by category)
+  // Base hotspots (filtered only by category if possible, but API doesn't provide category, so just return hotspots)
   const categoryHotspots = useMemo(() => {
-    if (activeFilter === "All") return HOTSPOTS_MOCK;
-    return HOTSPOTS_MOCK.filter((h) => h.category === activeFilter);
-  }, [activeFilter]);
+    return hotspots;
+  }, [activeFilter, hotspots]);
 
   const handleSelect = (hotspot: Hotspot) => {
     if (onHotspotSelect && !previewMode) {
@@ -121,7 +125,7 @@ export default function PollutionMap({
     : searchedPlace 
     ? { lat: searchedPlace.lat, lng: searchedPlace.lng } 
     : selectedHotspot 
-      ? { lat: selectedHotspot.lat, lng: selectedHotspot.lng } 
+      ? { lat: selectedHotspot.center_lat, lng: selectedHotspot.center_lng } 
       : null;
 
 
@@ -150,6 +154,13 @@ export default function PollutionMap({
             key={hotspot.id} 
             hotspot={hotspot} 
             onSelect={handleSelect} 
+          />
+        ))}
+
+        {!previewMode && reports.map((report) => (
+          <ReportMarker 
+            key={report.id} 
+            report={report} 
           />
         ))}
 

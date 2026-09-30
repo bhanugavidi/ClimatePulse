@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Leaf, UserCircle, LogOut, Moon, Sun } from 'lucide-react';
+import { Search, Leaf, UserCircle, LogOut, Moon, Sun, LayoutDashboard, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
+  const { user, isAdmin, signOut, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,21 +51,8 @@ export function Navbar() {
     }
   };
 
-  useEffect(() => {
-    const checkAuth = () => {
-      setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
-      setUserRole(localStorage.getItem('userRole'));
-    };
-    
-    checkAuth();
-    window.addEventListener('auth-change', checkAuth);
-    return () => window.removeEventListener('auth-change', checkAuth);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userRole');
-    window.dispatchEvent(new Event('auth-change'));
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logged out successfully');
     router.push('/');
   };
@@ -73,10 +60,16 @@ export function Navbar() {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Live Map', href: '/map' },
-    { name: 'Report', href: '/report' },
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Cross-Border', href: '/cross-border' },
   ];
+  
+  if (user) {
+    navLinks.push({ name: 'Report', href: '/report' });
+    navLinks.push({ name: 'My Reports', href: '/profile' });
+  }
+  
+  if (isAdmin) {
+    navLinks.push({ name: 'Admin', href: '/admin' });
+  }
 
   return (
     <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${
@@ -119,11 +112,11 @@ export function Navbar() {
             <Search className="h-5 w-5" />
           </button>
           
-          {isLoggedIn ? (
+          {user ? (
             <div className="flex items-center gap-3 border-l border-slate-300 pl-4 ml-2">
               <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                 <UserCircle className="h-5 w-5 text-emerald-600" />
-                <span className="hidden sm:inline-block capitalize">{userRole || 'User'}</span>
+                <span className="hidden sm:inline-block capitalize">{isAdmin ? 'Admin' : 'Citizen'}</span>
               </div>
               <button 
                 onClick={handleLogout}
@@ -135,7 +128,7 @@ export function Navbar() {
             </div>
           ) : (
             <Link
-              href="/auth"
+              href="/login"
               className="ml-2 rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-emerald-800 hover:shadow-md"
             >
               Get Started &rarr;
